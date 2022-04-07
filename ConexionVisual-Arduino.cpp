@@ -23,7 +23,7 @@ float float_from_cadena(char* cadena);
 int main(void)
 {
 	Serial* Arduino;
-	char puerto[] = "COM6"; // Puerto serie al que está conectado Arduino
+	char puerto[] = "COM6"; // Puerto serie al que estÃ¡ conectado Arduino
 	int opcion_menu;
 
 
@@ -93,7 +93,7 @@ int main(void)
 			printf("Mostrando datos...\n");
 
 
-		printf("   Introduzca otra opción: ");
+		printf("   Introduzca otra opciÃ³n: ");
 		scanf_s("%d", &opcion_menu);
 		while (opcion_menu > 14 || opcion_menu < 0)
 		{
@@ -109,13 +109,13 @@ int main(void)
 
 
 // *********************************************************************************
-// La función menú se limita a mostrar en pantalla la oferta de opciones disponibles
+// La funciÃ³n menÃº se limita a mostrar en pantalla la oferta de opciones disponibles
 // *********************************************************************************
 int menu(void)
 {
 	int opcion = -1;
 
-	printf("\n   Sistema automático de control de invernadero");
+	printf("\n   Sistema automÃ¡tico de control de invernadero");
 	printf("\n   ===========================================");
 	printf("\n\n\t1 - Verificar sensores de TEMPERATURA");
 	printf("\n\t2 - Monitorizar sensores de TEMPERATURA");
@@ -132,11 +132,11 @@ int menu(void)
 	printf("\n\t11 - Visualizar registro de LUMINOSIDAD");
 	printf("\n\t12 - Activar/Desactivar alarma de LUMINOSIDAD\n");
 
-	printf("\n\tINFORMACIÓN ADICIONAL");
-	printf("\n\n\t\t13 - Historial cronológico");
-	printf("\n\t\t14 - Gráficas");
-	printf("\n\n\t0 - Salir de la aplicación");
-	printf("\n\n   Introduzca una opción: ");
+	printf("\n\tINFORMACIÃ“N ADICIONAL");
+	printf("\n\n\t\t13 - Historial cronolÃ³gico");
+	printf("\n\t\t14 - GrÃ¡ficas");
+	printf("\n\n\t0 - Salir de la aplicaciÃ³n");
+	printf("\n\n   Introduzca una opciÃ³n: ");
 
 	scanf_s("%d", &opcion);
 
@@ -171,7 +171,7 @@ void activar_alarma_temperatura(Serial* Arduino)
 
 	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
 	if (bytesRecibidos <= 0)
-		printf("\nNo se ha recibido confirmación\n");
+		printf("\nNo se ha recibido confirmaciÃ³n\n");
 	else
 		printf("\n%s\n", mensaje_recibido);
 }
@@ -186,7 +186,7 @@ void monitorizar_sensor_temperatura(Serial* Arduino)
 		scanf_s("%f", &frecuencia);
 	} while (frecuencia < 0.5 || frecuencia>2.0);
 
-	printf("Pulse una tecla para finalizar la monitorización\n");
+	printf("Pulse una tecla para finalizar la monitorizaciÃ³n\n");
 	do
 	{
 		if (Arduino->IsConnected())
@@ -219,7 +219,7 @@ void verifica_sensores(Serial* Arduino, char* port)
 	else
 	{
 		printf("\nNo se ha podido conectar con Arduino.\n");
-		printf("Revise la conexión, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
+		printf("Revise la conexiÃ³n, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
 	}
 }
 
@@ -282,14 +282,14 @@ float float_from_cadena(char* cadena)
 	for (i = 0; cadena[i] != '\0' && estado != 3 && i < MAX_BUFFER; i++)
 		switch (estado)
 		{
-		case 0:// Antes del número
+		case 0:// Antes del nÃºmero
 			if (cadena[i] >= '0' && cadena[i] <= '9')
 			{
 				numero = cadena[i] - '0';
 				estado = 1;
 			}
 			break;
-		case 1:// Durante el número
+		case 1:// Durante el nÃºmero
 			if (cadena[i] >= '0' && cadena[i] <= '9')
 				numero = numero * 10 + cadena[i] - '0';
 			else
