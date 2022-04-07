@@ -9,14 +9,32 @@
 #define MAX_BUFFER 200
 #define PAUSA_MS 200
 
-// Funciones prototipo
+
 int menu(void);
-void verifica_sensores(Serial*, char*);
+void verifica_sensores_temperatura(Serial*, char*);
 void monitorizar_sensor_temperatura(Serial*);
 //void visualizar_registro_temperatura(Serial*);
 void activar_alarma_temperatura(Serial* Arduino);
 void comprobar_mensajes(Serial*);
 float leer_sensor_temperatura(Serial*);
+int Enviar_y_Recibir(Serial*, const char*, char*);
+float float_from_cadena(char* cadena);
+
+int menu(void);
+void verifica_sensores_humedad(Serial*, char*);
+void monitorizar_sensor_humedad(Serial*);
+void activar_alarma_humedad(Serial* Arduino);
+void comprobar_mensajes(Serial*);
+float leer_sensor_humedad(Serial*);
+int Enviar_y_Recibir(Serial*, const char*, char*);
+float float_from_cadena(char* cadena);
+
+int menu(void);
+void verifica_sensores_luminosidad(Serial*, char*);
+void monitorizar_sensor_luminosidad(Serial*);
+void activar_alarma_luminosidad(Serial* Arduino);
+void comprobar_mensajes(Serial*);
+float leer_sensor_luminosidad(Serial*);
 int Enviar_y_Recibir(Serial*, const char*, char*);
 float float_from_cadena(char* cadena);
 
@@ -41,7 +59,7 @@ int main(void)
 	{
 		if (opcion_menu == 1) {
 			printf("Mostrando datos...\n");
-			verifica_sensores(Arduino, puerto);
+			verifica_sensores_temperatura(Arduino, puerto);
 		}
 		if (opcion_menu == 2) {
 			printf("Mostrando datos...\n");
@@ -57,35 +75,35 @@ int main(void)
 		}
 		if (opcion_menu == 5) {
 			printf("Mostrando datos...\n");
-			verifica_sensores(Arduino, puerto);
+			verifica_sensores_humedad(Arduino, puerto);
 		}
 		if (opcion_menu == 6) {
 			printf("Mostrando datos...\n");
-			monitorizar_sensor_temperatura(Arduino);
+			monitorizar_sensor_humedad(Arduino);
 		}
 		if (opcion_menu == 7) {
 			printf("Mostrando datos...\n");
-			
+
 		}
 		if (opcion_menu == 8) {
 			printf("Mostrando datos...\n");
-			activar_alarma_temperatura(Arduino);
+			activar_alarma_humedad(Arduino);
 		}
 		if (opcion_menu == 9) {
 			printf("Mostrando datos...\n");
-			verifica_sensores(Arduino, puerto);
+			verifica_sensores_luminosidad(Arduino, puerto);
 		}
 		if (opcion_menu == 10) {
 			printf("Mostrando datos...\n");
-			monitorizar_sensor_temperatura(Arduino);
+			monitorizar_sensor_luminosidad(Arduino);
 		}
 		if (opcion_menu == 11) {
 			printf("Mostrando datos...\n");
-			
+
 		}
 		if (opcion_menu == 12) {
 			printf("Mostrando datos...\n");
-			activar_alarma_temperatura(Arduino);
+			activar_alarma_luminosidad(Arduino);
 		}
 		if (opcion_menu == 13)
 			printf("Mostrando datos...\n");
@@ -144,100 +162,6 @@ int menu(void)
 }
 
 
-
-void comprobar_mensajes(Serial* Arduino)
-{
-	int bytesRecibidos, total = 0;
-	char mensaje_recibido[MAX_BUFFER];
-
-	bytesRecibidos = Arduino->ReadData(mensaje_recibido, sizeof(char) * MAX_BUFFER - 1);
-	while (bytesRecibidos > 0)
-	{
-		Sleep(PAUSA_MS);
-		total += bytesRecibidos;
-		bytesRecibidos = Arduino->ReadData(mensaje_recibido + total, sizeof(char) * MAX_BUFFER - 1);
-	}
-	if (total > 0)
-	{
-		mensaje_recibido[total - 1] = '\0';
-		printf("\nMensaje recibido: %s\n", mensaje_recibido);
-	}
-}
-
-void activar_alarma_temperatura(Serial* Arduino)
-{
-	int bytesRecibidos;
-	char mensaje_recibido[MAX_BUFFER];
-
-	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
-	if (bytesRecibidos <= 0)
-		printf("\nNo se ha recibido confirmación\n");
-	else
-		printf("\n%s\n", mensaje_recibido);
-}
-
-void monitorizar_sensor_temperatura(Serial* Arduino)
-{
-	float frecuencia, temperatura;
-	char tecla;
-	do
-	{
-		printf("Establezca frecuencia de muestreo (0,5 Hz - 2,0 Hz):");
-		scanf_s("%f", &frecuencia);
-	} while (frecuencia < 0.5 || frecuencia>2.0);
-
-	printf("Pulse una tecla para finalizar la monitorización\n");
-	do
-	{
-		if (Arduino->IsConnected())
-		{
-			temperatura = leer_sensor_temperatura(Arduino);
-			if (temperatura != -1)
-				printf("%.2f ", temperatura);
-			else
-				printf("XXX ");
-		}
-		else
-			printf("\nNo se ha podido conectar con Arduino.\n");
-		if ((1 / frecuencia) * 1000 > PAUSA_MS)
-			Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
-	} while (_kbhit() == 0);
-	tecla = _getch();
-	return;
-}
-
-void verifica_sensores(Serial* Arduino, char* port)
-{
-	float temperatura;
-
-	if (Arduino->IsConnected())
-	{
-		temperatura = leer_sensor_temperatura(Arduino);
-		if (temperatura != -1)
-			printf("\nDistancia: %f\n", temperatura);
-	}
-	else
-	{
-		printf("\nNo se ha podido conectar con Arduino.\n");
-		printf("Revise la conexión, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
-	}
-}
-
-float leer_sensor_temperatura(Serial* Arduino)
-{
-	float temperatura;
-	int bytesRecibidos;
-	char mensaje_recibido[MAX_BUFFER];
-
-	bytesRecibidos = Enviar_y_Recibir(Arduino, "GET_TEMPERATURA\n", mensaje_recibido);
-
-	if (bytesRecibidos <= 0)
-		temperatura = -1;
-	else
-		temperatura = float_from_cadena(mensaje_recibido);
-	return temperatura;
-}
-
 int Enviar_y_Recibir(Serial* Arduino, const char* mensaje_enviar, char* mensaje_recibir)
 {
 	int bytes_recibidos = 0, total = 0;
@@ -268,9 +192,6 @@ int Enviar_y_Recibir(Serial* Arduino, const char* mensaje_enviar, char* mensaje_
 	//printf("LOG: %d bytes -> %s\nIntentos=%d - EOLN=%d\n", total, mensaje_recibir,intentos,fin_linea);
 	return total;
 }
-
-
-
 
 
 float float_from_cadena(char* cadena)
@@ -310,3 +231,265 @@ float float_from_cadena(char* cadena)
 		}
 	return numero;
 }
+
+void comprobar_mensajes(Serial* Arduino)
+{
+	int bytesRecibidos, total = 0;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Arduino->ReadData(mensaje_recibido, sizeof(char) * MAX_BUFFER - 1);
+	while (bytesRecibidos > 0)
+	{
+		Sleep(PAUSA_MS);
+		total += bytesRecibidos;
+		bytesRecibidos = Arduino->ReadData(mensaje_recibido + total, sizeof(char) * MAX_BUFFER - 1);
+	}
+	if (total > 0)
+	{
+		mensaje_recibido[total - 1] = '\0';
+		printf("\nMensaje recibido: %s\n", mensaje_recibido);
+	}
+}
+
+
+
+
+
+void verifica_sensores_temperatura(Serial* Arduino, char* port)
+{
+	float temperatura;
+
+	if (Arduino->IsConnected())
+	{
+		temperatura = leer_sensor_temperatura(Arduino);
+		if (temperatura != -1)
+			printf("\nTemperatura: %f\n", temperatura);
+	}
+	else
+	{
+		printf("\nNo se ha podido conectar con Arduino.\n");
+		printf("Revise la conexión, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
+	}
+}
+
+
+void monitorizar_sensor_temperatura(Serial* Arduino)
+{
+	float frecuencia, temperatura;
+	char tecla;
+	do
+	{
+		printf("Establezca frecuencia de muestreo (0,5 Hz - 2,0 Hz):");
+		scanf_s("%f", &frecuencia);
+	} while (frecuencia < 0.5 || frecuencia>2.0);
+
+	printf("Pulse una tecla para finalizar la monitorización\n");
+	do
+	{
+		if (Arduino->IsConnected())
+		{
+			temperatura = leer_sensor_temperatura(Arduino);
+			if (temperatura != -1)
+				printf("%.2f ", temperatura);
+			else
+				printf("XXX ");
+		}
+		else
+			printf("\nNo se ha podido conectar con Arduino.\n");
+		if ((1 / frecuencia) * 1000 > PAUSA_MS)
+			Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
+	} while (_kbhit() == 0);
+	tecla = _getch();
+	return;
+}
+
+
+
+float leer_sensor_temperatura(Serial* Arduino)
+{
+	float temperatura;
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "GET_TEMPERATURA\n", mensaje_recibido);
+
+	if (bytesRecibidos <= 0)
+		temperatura = -1;
+	else
+		temperatura = float_from_cadena(mensaje_recibido);
+	return temperatura;
+}
+
+void activar_alarma_temperatura(Serial* Arduino)
+{
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
+	if (bytesRecibidos <= 0)
+		printf("\nNo se ha recibido confirmación\n");
+	else
+		printf("\n%s\n", mensaje_recibido);
+}
+
+
+
+
+
+
+void verifica_sensores_humedad(Serial* Arduino, char* port)
+{
+	float humedad;
+
+	if (Arduino->IsConnected())
+	{
+		humedad = leer_sensor_humedad(Arduino);
+		if (humedad != -1)
+			printf("\nDistancia: %f\n", humedad);
+	}
+	else
+	{
+		printf("\nNo se ha podido conectar con Arduino.\n");
+		printf("Revise la conexión, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
+	}
+}
+
+void monitorizar_sensor_humedad(Serial* Arduino)
+{
+	float frecuencia, humedad;
+	char tecla;
+	do
+	{
+		printf("Establezca frecuencia de muestreo (0,5 Hz - 2,0 Hz):");
+		scanf_s("%f", &frecuencia);
+	} while (frecuencia < 0.5 || frecuencia>2.0);
+
+	printf("Pulse una tecla para finalizar la monitorización\n");
+	do
+	{
+		if (Arduino->IsConnected())
+		{
+			humedad = leer_sensor_humedad(Arduino);
+			if (humedad != -1)
+				printf("%.2f ", humedad);
+			else
+				printf("XXX ");
+		}
+		else
+			printf("\nNo se ha podido conectar con Arduino.\n");
+		if ((1 / frecuencia) * 1000 > PAUSA_MS)
+			Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
+	} while (_kbhit() == 0);
+	tecla = _getch();
+	return;
+}
+
+
+float leer_sensor_humedad(Serial* Arduino)
+{
+	float humedad;
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "GET_HUMEDAD\n", mensaje_recibido);
+
+	if (bytesRecibidos <= 0)
+		humedad = -1;
+	else
+		humedad = float_from_cadena(mensaje_recibido);
+	return humedad;
+}
+
+void activar_alarma_humedad(Serial* Arduino)
+{
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
+	if (bytesRecibidos <= 0)
+		printf("\nNo se ha recibido confirmación\n");
+	else
+		printf("\n%s\n", mensaje_recibido);
+}
+
+
+
+
+
+void verifica_sensores_luminosidad(Serial* Arduino, char* port)
+{
+	float luminosidad;
+
+	if (Arduino->IsConnected())
+	{
+		luminosidad = leer_sensor_luminosidad(Arduino);
+		if (luminosidad != -1)
+			printf("\nLuminosidad: %f\n", luminosidad);
+	}
+	else
+	{
+		printf("\nNo se ha podido conectar con Arduino.\n");
+		printf("Revise la conexión, el puerto %s y desactive el monitor serie del IDE de Arduino.\n", port);
+	}
+}
+
+
+void monitorizar_sensor_luminosidad(Serial* Arduino)
+{
+	float frecuencia, luminosidad;
+	char tecla;
+	do
+	{
+		printf("Establezca frecuencia de muestreo (0,5 Hz - 2,0 Hz):");
+		scanf_s("%f", &frecuencia);
+	} while (frecuencia < 0.5 || frecuencia>2.0);
+
+	printf("Pulse una tecla para finalizar la monitorización\n");
+	do
+	{
+		if (Arduino->IsConnected())
+		{
+			luminosidad = leer_sensor_luminosidad(Arduino);
+			if (luminosidad != -1)
+				printf("%.2f ", luminosidad);
+			else
+				printf("XXX ");
+		}
+		else
+			printf("\nNo se ha podido conectar con Arduino.\n");
+		if ((1 / frecuencia) * 1000 > PAUSA_MS)
+			Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
+	} while (_kbhit() == 0);
+	tecla = _getch();
+	return;
+}
+
+float leer_sensor_luminosidad(Serial* Arduino)
+{
+	float luminosidad;
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "GET_LUMINOSIDAD\n", mensaje_recibido);
+
+	if (bytesRecibidos <= 0)
+		luminosidad = -1;
+	else
+		luminosidad = float_from_cadena(mensaje_recibido);
+	return luminosidad;
+}
+
+
+void activar_alarma_luminosidad(Serial* Arduino)
+{
+	int bytesRecibidos;
+	char mensaje_recibido[MAX_BUFFER];
+
+	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
+	if (bytesRecibidos <= 0)
+		printf("\nNo se ha recibido confirmación\n");
+	else
+		printf("\n%s\n", mensaje_recibido);
+}
+
+
