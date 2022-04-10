@@ -16,7 +16,7 @@ El objetivo fundamental del proyecto es la construcción de un sistema que permi
 Foco LED 10W LEDA6001NW-B - Ref. IIF7030
 <br /> Ventilador DC 5V PWM - HALJIA L9110
 <br /> Moto Bomba Sumergible de Agua - 108.MT0103 - Ref. MMBB001
-<br /> Diodo LED 5 mm - Clear RGB 35° - Ref. SMDL5C0A   (Alarma)
+<br /> Diodo LED 5 mm - Cátodo común - Clear RGB 35° - Ref. SMDL5C0A   (Alarma)
 
 ## Sensores
 Módulo sensor humedad y temperatura DHT11 - 101020011 - Ref. SSHU004
