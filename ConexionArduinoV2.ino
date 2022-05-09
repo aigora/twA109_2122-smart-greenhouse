@@ -12,7 +12,7 @@ uint32_t delayMS;
 enum Estados {MODO_ALARMA_ON,MODO_ALARMA_OFF};
 Estados estado=MODO_ALARMA_OFF;
 //Aquí almacenamos los datos recogidos del LDR (sensor luminosidad):
-int luminosidad = 0;
+int luminosidad;
 //Y en qué pin analógico conectarmos el LDR
 int pinLDR = A0;
 
@@ -20,6 +20,9 @@ int pinLDR = A0;
 const int red_light_pin= 6;
 const int green_light_pin = 5;
 const int blue_light_pin = 3;
+const int red_light_pin2= 9;
+const int green_light_pin2 = 10;
+const int blue_light_pin2 = 11;
 String mensaje_entrada;
 String mensaje_salida;
 float temperatura;
@@ -33,11 +36,19 @@ void setup()
    pinMode(green_light_pin, OUTPUT);
    pinMode(blue_light_pin, OUTPUT);
 
+   pinMode(red_light_pin2, OUTPUT);
+   pinMode(green_light_pin2, OUTPUT);
+   pinMode(blue_light_pin2, OUTPUT);
+
    digitalWrite(red_light_pin,HIGH);
    digitalWrite(green_light_pin,HIGH);
-   digitalWrite(blue_light_pin,HIGH); //Apaga led
+   digitalWrite(blue_light_pin,HIGH); //Apaga led 1
+
+   digitalWrite(red_light_pin2,HIGH);
+   digitalWrite(green_light_pin2,HIGH);
+   digitalWrite(blue_light_pin2,HIGH); //Apaga led
    // Sensor DHT-11 temperatura-humedad
-     // Inicializamos sensor
+   // Inicializamos sensor
   dht.begin();
   // Imprime los detalles del sensor
   sensor_t sensor;
@@ -178,10 +189,14 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
 
   if (modo==0)
   {
-    estado_alarma=0;      // Led está apagado
+    estado_alarma=0;      // Leds están apagados
     digitalWrite(red_light_pin,HIGH);
     digitalWrite(green_light_pin,HIGH);
     digitalWrite(blue_light_pin,HIGH);
+
+    digitalWrite(red_light_pin2,HIGH);
+    digitalWrite(green_light_pin2,HIGH);
+    digitalWrite(blue_light_pin2,HIGH);
   }
   else
   {
@@ -189,10 +204,14 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
     switch (estado_alarma)
      {
        case 0: // Si detecta temperatura dentro del rango
-          if(rango==0)
+          if(rango==0){
             digitalWrite(red_light_pin,HIGH);
             digitalWrite(green_light_pin,HIGH);
             digitalWrite(blue_light_pin,HIGH);
+            digitalWrite(red_light_pin2,HIGH);
+            digitalWrite(green_light_pin2,HIGH);
+            digitalWrite(blue_light_pin2,HIGH);
+          }
          if (rango==1) // Si detecta una temperatura fuera del rango
          {
            //tiempo_alarma=millis(); // Referencia temporal
@@ -201,18 +220,22 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
          break;
        case 1: // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
           if (rango == 1){
-            estado_alarma=2; // Cambio de estado... y se enciende el led de color rojo
+            estado_alarma=2; // Cambio de estado... y se encienden los leds en color rojo de manera intermitente
             for(i=0;i<6;i++){
                digitalWrite(red_light_pin,LOW);
-               delay(500);
+               delay(250);
                digitalWrite(red_light_pin,HIGH);
-               delay(300);
+               delay(150);
+               digitalWrite(red_light_pin2,LOW);
+               delay(250);
+               digitalWrite(red_light_pin2,HIGH);
+               delay(150);
            Serial.println("ATENCION: LA TEMPERATURA ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
             Serial.print("\n");
           }
-         if (rango==0)  // La temperatura no se ha mantenido el tiempo mínimo
-           estado_alarma=0;  // Regresa al estado inicial
+         if (rango==0)
+           estado_alarma=0;  // Si vuelve al intervalo preestablecido, regresa al estado inicial
         break;
        case 2: // Alarma activa
          if (rango==0)  // Si la temperatura se mantiene dentro del rango
@@ -220,32 +243,22 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
            //tiempo_led_on=millis(); // Inicia temporización para mantener el led 
            digitalWrite(red_light_pin,HIGH);
            digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
+           digitalWrite(blue_light_pin,HIGH); //Apaga led 1
+           digitalWrite(red_light_pin2,HIGH);
+           digitalWrite(green_light_pin2,HIGH);
+           digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
            estado_alarma=0; //Regresa a estado inicial
            Serial.println("ATENCION:LA TEMPERATURA HA REGRESADO A SU RANGO PREDETERMINADO");   
          }
          else
           estado_alarma = 1;
          break;
-       /*case 3: // Verifica si la temperatura está de nuevo dentro del rango
-         if (millis()-tiempo_led_on>ms_led) // Si ha pasado el tiempo del led on
-         {
-          
-           digitalWrite(red_light_pin,HIGH);
-           digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
-           estado_alarma=0; //Regresa a estado inicial
-           Serial.println("ATENCION:LA TEMPERATURA HA REGRESADO A SU RANGO PREDETERMINADO");           
-         }
-         else
-          if (rango==1) // Si vuelve a detectar una temperatura fuera del rango
-            estado_alarma=2; // Regresa a estado 2, alarma activada*/
      }
   }
 }
 
 
-void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo) // ms_fuera = tiempo en alerta por temp fuera del rango; ms_led que esta encendido
+void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
 {
   static int  estado_alarma=0; // Estado actual
   //static unsigned long  tiempo_alarma=0; // Ref. de tiempo alarma
@@ -262,64 +275,61 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
   }
   else
   {
-    rango = (humedad >=hum_minima && humedad <=hum_maxima) ? 0:1;  // 0 = temp dentro rango, 1 = temp fuera rango
+    rango = (humedad >=hum_minima && humedad <=hum_maxima) ? 0:1;  // 0 = humedad dentro rango, 1 = humedad fuera rango
     switch (estado_alarma)
      {
-       case 0: // Si detecta temperatura dentro del rango
-          if(rango==0)
+       case 0: // Si detecta humedad dentro del rango
+          if(rango==0){
             digitalWrite(green_light_pin,HIGH);
-         if (rango==1) // Si detecta una temperatura fuera del rango
+            digitalWrite(green_light_pin2,HIGH);
+          }
+            
+         if (rango==1) // Si detecta humedad fuera del rango
          {
            //tiempo_alarma=millis(); // Referencia temporal
-           estado_alarma=1; // Cambia al estado 1     // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
+           estado_alarma=1; // Cambia al estado 1
          }
          break;
-       case 1: // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
+       case 1:
           if (rango == 1){
-            estado_alarma=2; // Cambio de estado... y se enciende el led de color rojo
+            estado_alarma=2; // Cambio de estado... y se encienden los leds en color verde de manera intermitente
             for(i=0;i<6;i++){
                digitalWrite(green_light_pin,LOW);
-               delay(500);
+               delay(250);
                digitalWrite(green_light_pin,HIGH);
-               delay(300);
+               delay(150);
+               digitalWrite(green_light_pin2,LOW);
+               delay(250);
+               digitalWrite(green_light_pin2,HIGH);
+               delay(150);
            Serial.println("ATENCION: LA HUMEDAD ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
             Serial.print("\n");
           }
-         if (rango==0)  // La temperatura no se ha mantenido el tiempo mínimo
-           estado_alarma=0;  // Regresa al estado inicial
+         if (rango==0)
+           estado_alarma=0;  // Si vuelve al intervalo preestablecido, regresa al estado inicial
         break;
        case 2: // Alarma activa
-         if (rango==0)  // Si la temperatura se mantiene dentro del rango
+         if (rango==0)  // Si la humedad se mantiene dentro del rango
          {
            //tiempo_led_on=millis(); // Inicia temporización para mantener el led 
            digitalWrite(red_light_pin,HIGH);
            digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
+           digitalWrite(blue_light_pin,HIGH); //Apaga led 1
+           digitalWrite(red_light_pin2,HIGH);
+           digitalWrite(green_light_pin2,HIGH);
+           digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
            estado_alarma=0; //Regresa a estado inicial
            Serial.println("ATENCION:LA HUMEDAD HA REGRESADO A SU RANGO PREDETERMINADO");   
          }
          else
           estado_alarma = 1;
          break;
-       /*case 3: // Verifica si la temperatura está de nuevo dentro del rango
-         if (millis()-tiempo_led_on>ms_led) // Si ha pasado el tiempo del led on
-         {
-          
-           digitalWrite(red_light_pin,HIGH);
-           digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
-           estado_alarma=0; //Regresa a estado inicial
-           Serial.println("ATENCION:LA TEMPERATURA HA REGRESADO A SU RANGO PREDETERMINADO");           
-         }
-         else
-          if (rango==1) // Si vuelve a detectar una temperatura fuera del rango
-            estado_alarma=2; // Regresa a estado 2, alarma activada*/
      }
   }
 }
 
-void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo) // ms_fuera = tiempo en alerta por temp fuera del rango; ms_led que esta encendido
+void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
 {
   static int  estado_alarma=0; // Estado actual
   //static unsigned long  tiempo_alarma=0; // Ref. de tiempo alarma
@@ -336,59 +346,55 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo) /
   }
   else
   {
-    rango = (luminosidad >=lum_minima && luminosidad <=lum_maxima) ? 0:1;  // 0 = temp dentro rango, 1 = temp fuera rango
+    rango = (luminosidad >=lum_minima && luminosidad <=lum_maxima) ? 0:1;  // 0 = lum dentro rango, 1 = lum fuera rango
     switch (estado_alarma)
      {
-       case 0: // Si detecta temperatura dentro del rango
-          if(rango==0)
+       case 0: // Si detecta luminosidad dentro del rango
+          if(rango==0){
             digitalWrite(blue_light_pin,HIGH);
-         if (rango==1) // Si detecta una temperatura fuera del rango
+            digitalWrite(blue_light_pin2,HIGH);
+          }
+         if (rango==1) // Si detecta luminosidad fuera del rango
          {
            //tiempo_alarma=millis(); // Referencia temporal
-           estado_alarma=1; // Cambia al estado 1     // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
+           estado_alarma=1; // Cambia al estado 1
          }
          break;
-       case 1: // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
+       case 1: // Espera unos segundos para asegurarse de que la luminosidad está fuera del rango
           if (rango == 1){
-            estado_alarma=2; // Cambio de estado... y se enciende el led de color rojo
+            estado_alarma=2; // Cambio de estado... y se encienden los leds en color azul de manera intermitente
             for(i=0;i<6;i++){
                digitalWrite(blue_light_pin,LOW);
-               delay(500);
+               delay(250);
                digitalWrite(blue_light_pin,HIGH);
-               delay(300);
+               delay(150);
+               digitalWrite(blue_light_pin2,LOW);
+               delay(250);
+               digitalWrite(blue_light_pin2,HIGH);
+               delay(150);
            Serial.println("ATENCION: LA LUMINOSIDAD ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
             Serial.print("\n");
          }
-         if (rango==0)  // La temperatura no se ha mantenido el tiempo mínimo
-           estado_alarma=0;  // Regresa al estado inicial
+         if (rango==0)
+           estado_alarma=0;  // Si vuelve al intervalo preestablecido, regresa al estado inicial
         break;
        case 2: // Alarma activa
-         if (rango==0)  // Si la temperatura se mantiene dentro del rango
+         if (rango==0)  // Si la luminosidad se mantiene dentro del rango
          {
            //tiempo_led_on=millis(); // Inicia temporización para mantener el led 
            digitalWrite(red_light_pin,HIGH);
            digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
+           digitalWrite(blue_light_pin,HIGH); //Apaga led 1
+           digitalWrite(red_light_pin2,HIGH);
+           digitalWrite(green_light_pin2,HIGH);
+           digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
            estado_alarma=0; //Regresa a estado inicial
            Serial.println("ATENCION:LA LUMINOSIDAD HA REGRESADO A SU RANGO PREDETERMINADO");   
          }
          else
           estado_alarma = 1;
          break;
-       /*case 3: // Verifica si la temperatura está de nuevo dentro del rango
-         if (millis()-tiempo_led_on>ms_led) // Si ha pasado el tiempo del led on
-         {
-          
-           digitalWrite(red_light_pin,HIGH);
-           digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led
-           estado_alarma=0; //Regresa a estado inicial
-           Serial.println("ATENCION:LA TEMPERATURA HA REGRESADO A SU RANGO PREDETERMINADO");           
-         }
-         else
-          if (rango==1) // Si vuelve a detectar una temperatura fuera del rango
-            estado_alarma=2; // Regresa a estado 2, alarma activada*/
      }
   }
 }
