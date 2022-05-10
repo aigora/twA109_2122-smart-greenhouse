@@ -4,9 +4,9 @@ Consiste en un pequeño invernadero capaz de medir distintos factores de su ento
 
 ## Integrantes del equipo
 
-Carlos Osuna Cabezudo, Osuuunaa. 
-<br /> 	Pablo Muñoz Moreno, pabels8. 
-<br /> Javier Rodríguez Jiménez, 
+Carlos Osuna Cabezudo
+<br /> 	Pablo Muñoz Moreno 
+<br /> Javier Rodríguez Jiménez 
 
 ## Objetivos del trabajo
 
