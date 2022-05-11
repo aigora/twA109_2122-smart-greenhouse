@@ -2,7 +2,7 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-#define DHTPIN 2    // Se conecta el cable de SIG (Data output) al pin 2
+#define DHTPIN 2    // Sensor temperatura: Se conecta el cable de SIG (Data output) al pin 2
 #define DHTTYPE    DHT11     // Nombre del sensor
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
@@ -15,6 +15,10 @@ Estados estado=MODO_ALARMA_OFF;
 int luminosidad;
 //Y en qué pin analógico conectarmos el LDR
 int pinLDR = A0;
+// Ventilador:
+const int alt = 7;
+const int cont = 8;
+int speed = 200;
 
 //Decimos qué pines vamos a utilizar para el LED RGB
 const int red_light_pin= 6;
@@ -23,6 +27,7 @@ const int blue_light_pin = 3;
 const int red_light_pin2= 9;
 const int green_light_pin2 = 10;
 const int blue_light_pin2 = 11;
+const int orange_light_pin= 12;
 String mensaje_entrada;
 String mensaje_salida;
 float temperatura;
@@ -39,6 +44,13 @@ void setup()
    pinMode(red_light_pin2, OUTPUT);
    pinMode(green_light_pin2, OUTPUT);
    pinMode(blue_light_pin2, OUTPUT);
+   
+   pinMode(orange_light_pin, OUTPUT);
+
+   pinMode(alt,OUTPUT);     // Pin ventilador hacia un sentido
+   pinMode(cont,OUTPUT);    // Pin ventilador hacia el sentido contrario
+
+   pinMode(LED_BUILTIN, OUTPUT);      // Relé pin 13
 
    digitalWrite(red_light_pin,HIGH);
    digitalWrite(green_light_pin,HIGH);
@@ -47,10 +59,12 @@ void setup()
    digitalWrite(red_light_pin2,HIGH);
    digitalWrite(green_light_pin2,HIGH);
    digitalWrite(blue_light_pin2,HIGH); //Apaga led
+
+   digitalWrite(orange_light_pin,HIGH); //Apaga led
    // Sensor DHT-11 temperatura-humedad
    // Inicializamos sensor
   dht.begin();
-  // Imprime los detalles del sensor
+  // Imprime los detalles de los sensores
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
   Serial.println(F("\nSensor de temperatura"));
@@ -67,6 +81,13 @@ void setup()
   Serial.print  (F("Valor mínimo:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
   Serial.print  (F("Error de precisión:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
   Serial.println(F("------------------------------------"));
+
+  Serial.println(F("Sensor de luminosidad"));
+  Serial.print  (F("Nombre del sensor: ")); Serial.println("LDR");
+  Serial.print  (F("Valor máximo:   ")); Serial.print("2000"); Serial.println(F(" Lx"));
+  Serial.print  (F("Valor mínimo:   ")); Serial.print("0"); Serial.println(F(" Lx"));
+  Serial.print  (F("Error de precisión:  ")); Serial.print("20"); Serial.println(F(" Lx"));
+  Serial.println(F("------------------------------------\n"));
   // Para un segunda tras mostrar la información
   delayMS = sensor.min_delay / 1000;
    
@@ -74,7 +95,9 @@ void setup()
 
 void loop ()
 {
-  // Sensor DHT11
+  for(int k=0;k<3;k++)    // Con el bucle se logra que las alarmas se activen cada 6 segundos si es que es necesario
+  {
+    // Sensor DHT11
   temperatura =  medir_temperatura();    // Cada segundo, temperatura se va actualizando
   humedad = medir_humedad();
 
@@ -88,6 +111,8 @@ void loop ()
   Serial.print(F("Luminosidad: "));
   Serial.print(luminosidad);
   Serial.println(F("Lx\n"));    // Serial.println hace un \n al final
+  }
+  
 
   
  
@@ -97,7 +122,7 @@ void loop ()
   {
     case MODO_ALARMA_ON:  //temperatura_minima, temperatura_maxima,int ms_fuera,int ms_led,int modo ;  modo = 1 -> alarma activa
         modo_alarma_temp(temperatura,18.0,21.0,1);
-        modo_alarma_hum(humedad,40.0,50.0,1);
+        modo_alarma_hum(humedad,49.0,50.0,1);
         modo_alarma_lum(luminosidad,900,1000,1);
         break;
     case MODO_ALARMA_OFF:
@@ -155,6 +180,16 @@ void procesar_mensajes(void)
       float temperatura = medir_temperatura();
       mensaje_salida=String("TEMPERATURA="+String(temperatura ,3));
     }
+    if (mensaje_entrada.compareTo("GET_HUMEDAD")==0)
+    {
+      float humedad = medir_humedad();
+      mensaje_salida=String("HUMEDAD="+String(humedad ,3));
+    }
+    if (mensaje_entrada.compareTo("GET_LUMINOSIDAD")==0)
+    {
+      int luminosidad = analogRead(pinLDR);
+      mensaje_salida=String("LUMINOSIDAD="+String(luminosidad ,3));
+    }
     else
       if (mensaje_entrada.compareTo("SET_MODO_ALARMA")==0)  // Desactivar alarma
       {
@@ -197,6 +232,9 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
     digitalWrite(red_light_pin2,HIGH);
     digitalWrite(green_light_pin2,HIGH);
     digitalWrite(blue_light_pin2,HIGH);
+
+    analogWrite(cont,LOW);
+    analogWrite(alt,LOW);
   }
   else
   {
@@ -211,6 +249,8 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
             digitalWrite(red_light_pin2,HIGH);
             digitalWrite(green_light_pin2,HIGH);
             digitalWrite(blue_light_pin2,HIGH);
+            analogWrite(cont,LOW);
+            analogWrite(alt,LOW);
           }
          if (rango==1) // Si detecta una temperatura fuera del rango
          {
@@ -221,7 +261,9 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
        case 1: // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
           if (rango == 1){
             estado_alarma=2; // Cambio de estado... y se encienden los leds en color rojo de manera intermitente
-            for(i=0;i<6;i++){
+            if (temperatura > temperatura_maxima)
+              analogWrite(alt,speed);
+            for(i=0;i<5;i++){
                digitalWrite(red_light_pin,LOW);
                delay(250);
                digitalWrite(red_light_pin,HIGH);
@@ -268,10 +310,16 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
 
   if (modo==0)
   {
-    estado_alarma=0;      // Led está apagado
-    /*digitalWrite(red_light_pin,HIGH);
+    estado_alarma=0;      // Leds están apagados
+    digitalWrite(red_light_pin,HIGH);
     digitalWrite(green_light_pin,HIGH);
-    digitalWrite(blue_light_pin,HIGH);*/
+    digitalWrite(blue_light_pin,HIGH);
+
+    digitalWrite(red_light_pin2,HIGH);
+    digitalWrite(green_light_pin2,HIGH);
+    digitalWrite(blue_light_pin2,HIGH);
+
+    digitalWrite(LED_BUILTIN, LOW);   // Relé apagado
   }
   else
   {
@@ -293,7 +341,12 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
        case 1:
           if (rango == 1){
             estado_alarma=2; // Cambio de estado... y se encienden los leds en color verde de manera intermitente
-            for(i=0;i<6;i++){
+            if(humedad<=hum_minima)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);   // activa la bomba de agua
+            }
+              
+            for(i=0;i<5;i++){
                digitalWrite(green_light_pin,LOW);
                delay(250);
                digitalWrite(green_light_pin,HIGH);
@@ -304,6 +357,8 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
                delay(150);
            Serial.println("ATENCION: LA HUMEDAD ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
+            if(humedad<=hum_minima)
+              digitalWrite(LED_BUILTIN, LOW);    // desactiva la bomba de agua tras 4 segundos (tiempo que dura el bucle for con alarmas)
             Serial.print("\n");
           }
          if (rango==0)
@@ -339,10 +394,14 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
 
   if (modo==0)
   {
-    estado_alarma=0;      // Led está apagado
-    /*digitalWrite(red_light_pin,HIGH);
+    estado_alarma=0;      // Leds están apagados
+    digitalWrite(red_light_pin,HIGH);
     digitalWrite(green_light_pin,HIGH);
-    digitalWrite(blue_light_pin,HIGH);*/
+    digitalWrite(blue_light_pin,HIGH);
+
+    digitalWrite(red_light_pin2,HIGH);
+    digitalWrite(green_light_pin2,HIGH);
+    digitalWrite(blue_light_pin2,HIGH);
   }
   else
   {
@@ -351,8 +410,13 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
      {
        case 0: // Si detecta luminosidad dentro del rango
           if(rango==0){
-            digitalWrite(blue_light_pin,HIGH);
-            digitalWrite(blue_light_pin2,HIGH);
+           digitalWrite(red_light_pin,HIGH);
+           digitalWrite(green_light_pin,HIGH);
+           digitalWrite(blue_light_pin,HIGH); //Apaga led 1
+           digitalWrite(red_light_pin2,HIGH);
+           digitalWrite(green_light_pin2,HIGH);
+           digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
+           digitalWrite(orange_light_pin,HIGH);
           }
          if (rango==1) // Si detecta luminosidad fuera del rango
          {
@@ -362,8 +426,9 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
          break;
        case 1: // Espera unos segundos para asegurarse de que la luminosidad está fuera del rango
           if (rango == 1){
-            estado_alarma=2; // Cambio de estado... y se encienden los leds en color azul de manera intermitente
-            for(i=0;i<6;i++){
+            estado_alarma=2; // Cambio de estado... y se enciende el led naranja a modo de luz solar y se encienden los leds en color azul de manera intermitente a modo de alarma
+            digitalWrite(orange_light_pin,LOW);
+            for(i=0;i<5;i++){
                digitalWrite(blue_light_pin,LOW);
                delay(250);
                digitalWrite(blue_light_pin,HIGH);
@@ -376,19 +441,16 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
             }
             Serial.print("\n");
          }
-         if (rango==0)
+         if (rango==0){
            estado_alarma=0;  // Si vuelve al intervalo preestablecido, regresa al estado inicial
+
+         }
         break;
        case 2: // Alarma activa
          if (rango==0)  // Si la luminosidad se mantiene dentro del rango
          {
            //tiempo_led_on=millis(); // Inicia temporización para mantener el led 
-           digitalWrite(red_light_pin,HIGH);
-           digitalWrite(green_light_pin,HIGH);
-           digitalWrite(blue_light_pin,HIGH); //Apaga led 1
-           digitalWrite(red_light_pin2,HIGH);
-           digitalWrite(green_light_pin2,HIGH);
-           digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
+          // Se apagan todos los leds
            estado_alarma=0; //Regresa a estado inicial
            Serial.println("ATENCION:LA LUMINOSIDAD HA REGRESADO A SU RANGO PREDETERMINADO");   
          }
