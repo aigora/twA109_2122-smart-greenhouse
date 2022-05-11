@@ -4,7 +4,7 @@ Consiste en un pequeño invernadero capaz de medir distintos factores de su ento
 
 ## Integrantes del equipo
 
-Carlos Osuna Cabezudo
+Carlos Osuna Cabezudo: @Osuuunaa
 <br /> 	Pablo Muñoz Moreno 
 <br /> Javier Rodríguez Jiménez 
 
@@ -29,3 +29,5 @@ Módulo Bluetooth HC-06 - Ref. LCBTHT6
 <br /> Varta LR06 - Pila Alcalina 1,5 V AA - Blister 8 Unidades - Ref. BA51680    (Fuente de alimentación)
 <br /> Portapilas 8 Pilas AA Cable - Ref. BA71677
 <br /> Resistencia Película de Carbón ¼ W - 330K Ohmios 5% - 10 Unidades - CR25330K - Ref. RS2A25B330K
+<br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
+<br /> Seeed Studio - Módulo Relé 5 V - Plug and Play - 103020005 - Ref. LCYLRL5    (Acciona bomba de agua)
