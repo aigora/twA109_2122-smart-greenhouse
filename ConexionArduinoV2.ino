@@ -10,7 +10,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS;
 
 enum Estados {MODO_ALARMA_ON,MODO_ALARMA_OFF};
-Estados estado=MODO_ALARMA_OFF;
+Estados estado=MODO_ALARMA_ON;    // Empieza con modo automático por defecto
 //Aquí almacenamos los datos recogidos del LDR (sensor luminosidad):
 int luminosidad;
 //Y en qué pin analógico conectarmos el LDR
@@ -32,6 +32,9 @@ String mensaje_entrada;
 String mensaje_salida;
 float temperatura;
 float humedad;
+float temp_media=0;
+float hum_media=0;
+int lum_media=0;
 
 void setup()
 {
@@ -100,29 +103,34 @@ void loop ()
     // Sensor DHT11
   temperatura =  medir_temperatura();    // Cada segundo, temperatura se va actualizando
   humedad = medir_humedad();
-
+  temp_media = temp_media + temperatura;
+  hum_media = hum_media + humedad;
   
   // Sensor de luminosidad
   //Guardamos el valor leido en una variable
   //IMPORTANTE UTILIZAR EL SERIAL PARA VER LOS VALORES Y COMPROBAR QUE RECIBE VALORES BUENOS
-  int poca_luz=1000;
-  int mucha_luz=800;
+
   luminosidad = analogRead(pinLDR);
+  lum_media = lum_media + luminosidad;
   Serial.print(F("Luminosidad: "));
   Serial.print(luminosidad);
   Serial.println(F("Lx\n"));    // Serial.println hace un \n al final
   }
+// calcula la media de los datos recogidos en tres segundos (bucle de arriba)
+  temp_media = temp_media / 3;
+  hum_media = hum_media / 3;
+  lum_media = lum_media / 3;
   
 
   
  
-  //procesar_mensajes();
-  estado=  MODO_ALARMA_ON;
+  procesar_mensajes();
+  //estado=  MODO_ALARMA_ON;
   switch (estado)
   {
     case MODO_ALARMA_ON:  //temperatura_minima, temperatura_maxima,int ms_fuera,int ms_led,int modo ;  modo = 1 -> alarma activa
         modo_alarma_temp(temperatura,18.0,21.0,1);
-        modo_alarma_hum(humedad,49.0,50.0,1);
+        modo_alarma_hum(humedad,40.0,50.0,1);
         modo_alarma_lum(luminosidad,900,1000,1);
         break;
     case MODO_ALARMA_OFF:
@@ -131,6 +139,10 @@ void loop ()
         modo_alarma_lum(luminosidad,900,1000,0);
         break;
   }
+  // Reseteo de datos
+  temperatura = 0;
+  humedad=0;
+  luminosidad=0;
 }
 
 
@@ -214,7 +226,7 @@ void procesar_mensajes(void)
 
 
 
-void modo_alarma_temp(float temperatura, float temperatura_minima, float temperatura_maxima,int modo) // ms_fuera = tiempo en alerta por temp fuera del rango; ms_led que esta encendido
+void modo_alarma_temp(float temp_media, float temperatura_minima, float temperatura_maxima,int modo) // ms_fuera = tiempo en alerta por temp fuera del rango; ms_led que esta encendido
 {
   static int  estado_alarma=0; // Estado actual
   //static unsigned long  tiempo_alarma=0; // Ref. de tiempo alarma
@@ -238,7 +250,7 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
   }
   else
   {
-    rango = (temperatura >=temperatura_minima && temperatura <=temperatura_maxima) ? 0:1;  // 0 = temp dentro rango, 1 = temp fuera rango
+    rango = (temp_media >=temperatura_minima && temp_media <=temperatura_maxima) ? 0:1;  // 0 = temp dentro rango, 1 = temp fuera rango
     switch (estado_alarma)
      {
        case 0: // Si detecta temperatura dentro del rango
@@ -261,8 +273,8 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
        case 1: // Espera unos segundos para asegurarse de que la temperatura está fuera del rango
           if (rango == 1){
             estado_alarma=2; // Cambio de estado... y se encienden los leds en color rojo de manera intermitente
-            if (temperatura > temperatura_maxima)
-              analogWrite(alt,speed);
+            if (temp_media > temperatura_maxima)
+              analogWrite(alt,speed);     // Activa el ventilador a la velocidad deseada
             for(i=0;i<5;i++){
                digitalWrite(red_light_pin,LOW);
                delay(250);
@@ -274,6 +286,8 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
                delay(150);
            Serial.println("ATENCION: LA TEMPERATURA ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
+            if (temp_media > temperatura_maxima)
+              analogWrite(alt,LOW);     // Desactiva el ventilador
             Serial.print("\n");
           }
          if (rango==0)
@@ -300,7 +314,7 @@ void modo_alarma_temp(float temperatura, float temperatura_minima, float tempera
 }
 
 
-void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
+void modo_alarma_hum(float hum_media, float hum_minima, float hum_maxima,int modo)
 {
   static int  estado_alarma=0; // Estado actual
   //static unsigned long  tiempo_alarma=0; // Ref. de tiempo alarma
@@ -323,7 +337,7 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
   }
   else
   {
-    rango = (humedad >=hum_minima && humedad <=hum_maxima) ? 0:1;  // 0 = humedad dentro rango, 1 = humedad fuera rango
+    rango = (hum_media >=hum_minima && hum_media <=hum_maxima) ? 0:1;  // 0 = humedad dentro rango, 1 = humedad fuera rango
     switch (estado_alarma)
      {
        case 0: // Si detecta humedad dentro del rango
@@ -341,7 +355,7 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
        case 1:
           if (rango == 1){
             estado_alarma=2; // Cambio de estado... y se encienden los leds en color verde de manera intermitente
-            if(humedad<=hum_minima)
+            if(hum_media<=hum_minima)
             {
                 digitalWrite(LED_BUILTIN, HIGH);   // activa la bomba de agua
             }
@@ -357,7 +371,7 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
                delay(150);
            Serial.println("ATENCION: LA HUMEDAD ESTÁ FUERA DEL RANGO PREESTABLECIDO"); // Mensaje de alarma
             }
-            if(humedad<=hum_minima)
+            if(hum_media<=hum_minima)
               digitalWrite(LED_BUILTIN, LOW);    // desactiva la bomba de agua tras 4 segundos (tiempo que dura el bucle for con alarmas)
             Serial.print("\n");
           }
@@ -376,6 +390,7 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
            digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
            estado_alarma=0; //Regresa a estado inicial
            Serial.println("ATENCION:LA HUMEDAD HA REGRESADO A SU RANGO PREDETERMINADO");   
+           digitalWrite(LED_BUILTIN, LOW);   // Desactiva la bomba de agua
          }
          else
           estado_alarma = 1;
@@ -384,7 +399,7 @@ void modo_alarma_hum(float humedad, float hum_minima, float hum_maxima,int modo)
   }
 }
 
-void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
+void modo_alarma_lum(int lum_media, int lum_minima, int lum_maxima,int modo)
 {
   static int  estado_alarma=0; // Estado actual
   //static unsigned long  tiempo_alarma=0; // Ref. de tiempo alarma
@@ -405,7 +420,7 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
   }
   else
   {
-    rango = (luminosidad >=lum_minima && luminosidad <=lum_maxima) ? 0:1;  // 0 = lum dentro rango, 1 = lum fuera rango
+    rango = (lum_media >=lum_minima && lum_media <=lum_maxima) ? 0:1;  // 0 = lum dentro rango, 1 = lum fuera rango
     switch (estado_alarma)
      {
        case 0: // Si detecta luminosidad dentro del rango
@@ -416,7 +431,7 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
            digitalWrite(red_light_pin2,HIGH);
            digitalWrite(green_light_pin2,HIGH);
            digitalWrite(blue_light_pin2,HIGH); //Apaga led 2
-           digitalWrite(orange_light_pin,HIGH);
+           digitalWrite(orange_light_pin,HIGH); // Apaga diodo naranja
           }
          if (rango==1) // Si detecta luminosidad fuera del rango
          {
@@ -451,8 +466,9 @@ void modo_alarma_lum(int luminosidad, int lum_minima, int lum_maxima,int modo)
          {
            //tiempo_led_on=millis(); // Inicia temporización para mantener el led 
           // Se apagan todos los leds
+          digitalWrite(orange_light_pin,HIGH); // Apaga diodo naranja   
+          Serial.println("ATENCION:LA LUMINOSIDAD HA REGRESADO A SU RANGO PREDETERMINADO");
            estado_alarma=0; //Regresa a estado inicial
-           Serial.println("ATENCION:LA LUMINOSIDAD HA REGRESADO A SU RANGO PREDETERMINADO");   
          }
          else
           estado_alarma = 1;
