@@ -5,7 +5,6 @@
 #include <conio.h>
 #include <iostream>
 
-
 #include "SerialClass.h"
 #include "SerialClass.cpp"
 
@@ -27,12 +26,13 @@ int menu(void);
 void configura(void);
 void comprobar_mensajes(Serial*);
 int Enviar_y_Recibir(Serial*, const char*, char*);
-float float_from_cadena(char* );
+float float_from_cadena(char*);
 void activar_alarma(Serial*);
 void reemplazar_vectores(float[], float[]);
-int crear_fichero_temperatura(float[]);
-int escribir_fichero_temperatura(Serial*, float[]);
-int leer_fichero_temperatura(Serial*, float[]);
+int crear_fichero_temperatura(int[],char[]);
+int escribir_fichero_temperatura(Serial*, int[],char[]);
+int leer_fichero_temperatura(int[],char[]);
+void fichero(void);
 
 // Temperatura
 void verifica_sensor_temp(Serial*, char*);
@@ -52,13 +52,15 @@ void visualizar_datos_luminosidad(Serial*);
 //Minuto tres_minutos_luminosidad(Serial*);
 float leer_sensor_luminosidad(Serial*);
 
+
+
 //----------------------------------------------------------------------------------------------------------
 // FUNCION PRINCIPAL
 // ---------------------------------------------------------------------------------------------------------
 int main(void)
 {
 	Serial* Arduino;
-	char puerto[] = "COM6"; // Puerto serie al que está conectado Arduino
+	char puerto[] = "COM3"; // Puerto serie al que está conectado Arduino
 	int opcion_menu;
 
 	configura();
@@ -68,12 +70,12 @@ int main(void)
 
 	opcion_menu = menu();
 	int opcion2;
-	while (opcion_menu > 12 || opcion_menu < 0)		// Opcion incorrecta
+	while (opcion_menu > 13 || opcion_menu < 0)		// Opcion incorrecta
 	{
 		printf("Introduzca una de las opciones disponibles, por favor: ");
 		scanf_s("%d", &opcion_menu);
 	}
-	while (opcion_menu <= 12 && opcion_menu >= 1)		// Opcion correcta
+	while (opcion_menu <= 13 && opcion_menu >= 1)		// Opcion correcta
 	{
 		if (opcion_menu == 1)
 		{
@@ -149,36 +151,25 @@ int main(void)
 				opcion_menu = menu();
 			}
 		}
+		if (opcion_menu == 12)
+		{
+			system("cls");
+			fichero();		// Imprime por pantalla el contenido
+			opcion_menu = menu();
+		}
+		while (opcion_menu > 12 || opcion_menu < 0) {
+			printf("Introduzca una de las opciones disponibles, por favor: ");
+			scanf_s("%d", &opcion_menu);
+		}
 	}
 
 	if (opcion_menu == 0)
 		printf("Fin del programa\n");
 
 	// Fichero
-	char filename[] = "Temperatura.txt";
-	float entrada[LONGCAD], salida[LONGCAD];
-	int exito, i;
-	for (i = 0; i < LONGCAD; i++)
-		entrada[i] = leer_sensor_temperatura(Arduino);
-	exito = crear_fichero_temperatura(entrada);
-	if (exito == 1) // Si se ha podido crear el fichero
-	{
-		exito = leer_fichero_temperatura(Arduino,salida);
-		if (exito == 1) // Si se ha podido leer el fichero
-		{
-			printf("Contenido del fichero: ");
-			for (i = 0; i < LONGCAD; i++)
-				printf("%f ", salida[i]);
-		}
-		else
-			printf("No se ha podido crear el fichero\n");
-	}
-	else
-		printf("No se ha podido abrir el fichero\n");
-
-	printf("\n");
-	system("PAUSE");
 	
+	//system("PAUSE");			// Espera a que el usuario pulse una tecla
+
 	return 0;
 }
 // ---------------------------------------------------------------------------------------
@@ -190,31 +181,33 @@ int menu(void)
 	int opcion;
 	float intro;
 
-		printf("\n   Sistema automático de control de invernadero");
-		printf("\n   ===========================================");
-		printf("\n\n\t1 - Verificar sensores de TEMPERATURA");
-		printf("\n\t2 - Visualizar registro de TEMPERATURA en tiempo real");
-		printf("\n\t3 - Consultar últimos tres minutos de TEMPERATURA");
+	printf("\n   Sistema automático de control de invernadero");
+	printf("\n   ===========================================");
+	printf("\n\n\t1 - Verificar sensores de TEMPERATURA");
+	printf("\n\t2 - Visualizar registro de TEMPERATURA en tiempo real");
+	printf("\n\t3 - Consultar últimos tres minutos de TEMPERATURA");
 
-		printf("\n\n\t4 - Verificar sensores de HUMEDAD");
-		printf("\n\t5 - Visualizar registro de HUMEDAD en tiempo real");
-		printf("\n\t6 - Consultar últimos tres minutos de HUMEDAD");
+	printf("\n\n\t4 - Verificar sensores de HUMEDAD");
+	printf("\n\t5 - Visualizar registro de HUMEDAD en tiempo real");
+	printf("\n\t6 - Consultar últimos tres minutos de HUMEDAD");
 
-		printf("\n\n\t7 - Verificar sensores de LUMINOSIDAD");
-		printf("\n\t8 - Visualizar registro de LUMINOSIDAD en tiempo real");
-		printf("\n\t9 - Consultar últimos tres minutos de LUMINOSIDAD");
+	printf("\n\n\t7 - Verificar sensores de LUMINOSIDAD");
+	printf("\n\t8 - Visualizar registro de LUMINOSIDAD en tiempo real");
+	printf("\n\t9 - Consultar últimos tres minutos de LUMINOSIDAD");
 
-		printf("\n\t10 - Activar/Desactivar alarma\n");
+	printf("\n\n\t10 - Activar/Desactivar alarma");
 
-		printf("\n\t11 - INFORMACIÓN ADICIONAL");
+	printf("\n\n\t11 - INFORMACIÓN ADICIONAL");
 
-		printf("\n\n\t0 - Salir de la aplicación");
-		printf("\n\n   Introduzca una opción: ");
+	printf("\n\n\t12 - Ver contenido fichero");
 
-		scanf_s("%d", &opcion);
-		intro = getchar();
-		if (opcion < 0 || opcion > 12)
-			printf("\nOpción inexistente.\n\n");
+	printf("\n\n\t0 - Salir de la aplicación");
+	printf("\n\n   Introduzca una opción: ");
+
+	scanf_s("%d", &opcion);
+	intro = getchar();
+	if (opcion < 0 || opcion > 13)
+		printf("\nOpción inexistente.\n\n");
 
 	printf("\n");
 	return opcion;
@@ -277,7 +270,7 @@ int Enviar_y_Recibir(Serial* Arduino, const char* mensaje_enviar, char* mensaje_
 	if (total > 0)
 		mensaje_recibir[total - 1] = '\0';
 
-	printf("LOG: %d bytes -> %s\nIntentos=%d - EOLN=%d\n", total, mensaje_recibir, intentos, fin_linea);
+	//printf("LOG: %d bytes -> %s\nIntentos=%d - EOLN=%d\n", total, mensaje_recibir, intentos, fin_linea);
 	return total;
 }
 
@@ -286,22 +279,22 @@ int Enviar_y_Recibir(Serial* Arduino, const char* mensaje_enviar, char* mensaje_
 float float_from_cadena(char* cadena)
 {
 	float numero = 0;
-	int i, divisor = 10, estado = 0;
+	int i, divisor = 3, estado = 0;
 
 
 	for (i = 0; cadena[i] != '\0' && estado != 3 && i < MAX_BUFFER; i++)
 		switch (estado)
 		{
 		case 0:// Antes del número
-			if (cadena[i] >= '0' && cadena[i] <= '9')
+			if (cadena[i] >= '0' && cadena[i] <= '2')
 			{
 				numero = cadena[i] - '0';
 				estado = 1;
 			}
 			break;
 		case 1:// Durante el número
-			if (cadena[i] >= '0' && cadena[i] <= '9')
-				numero = numero * 10 + cadena[i] - '0';
+			if (cadena[i] >= '0' && cadena[i] <= '2')
+				numero = numero * 3 + cadena[i] - '0';
 			else
 				if (cadena[i] == '.' || cadena[i] == ',')
 					estado = 2;
@@ -312,7 +305,7 @@ float float_from_cadena(char* cadena)
 			if (cadena[i] >= '0' && cadena[i] <= '9')
 			{
 				numero = numero + (float)(cadena[i] - '0') / divisor;
-				divisor *= 10;
+				divisor *= 3;
 			}
 			else
 				estado = 3;
@@ -327,6 +320,7 @@ void activar_alarma(Serial* Arduino)
 {
 	int bytesRecibidos;
 	char mensaje_recibido[MAX_BUFFER];
+	system("cls");
 
 	bytesRecibidos = Enviar_y_Recibir(Arduino, "SET_MODO_ALARMA\n", mensaje_recibido);
 	if (bytesRecibidos <= 0)
@@ -389,10 +383,10 @@ void visualizar_datos_temperatura(Serial* Arduino)
 	{
 		if (i < LONGCAD)			// Hasta completar el primer minuto
 		{
-			//if (Arduino->IsConnected())
-			//{
-			temperatura = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
-				//temperatura = leer_sensor_temperatura(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
+			if (Arduino->IsConnected())
+			{
+			//temperatura = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
+				temperatura = leer_sensor_temperatura(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
 			if (opcion == 1) {
 				vector1[i] = temperatura;
 			}
@@ -425,9 +419,9 @@ void visualizar_datos_temperatura(Serial* Arduino)
 			}
 			else
 				printf("XXX ");
-			//}
-			//else
-			//	printf("\nNo se ha podido conectar con Arduino.\n");
+			}
+			else
+				printf("\nNo se ha podido conectar con Arduino.\n");
 			if ((1 / frecuencia) * 1000 > PAUSA_MS)
 				Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
 		}
@@ -572,10 +566,10 @@ void visualizar_datos_humedad(Serial* Arduino)
 	{
 		if (i < LONGCAD)			// Hasta completar el primer minuto
 		{
-			//if (Arduino->IsConnected())
-			//{
-			humedad = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
-				//humedad = leer_sensor_humedad(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
+			if (Arduino->IsConnected())
+			{
+			//humedad = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
+				humedad = leer_sensor_humedad(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
 			if (opcion == 1) {
 				vector1[i] = humedad;
 			}
@@ -608,9 +602,9 @@ void visualizar_datos_humedad(Serial* Arduino)
 			}
 			else
 				printf("XXX ");
-			//}
-			//else
-			//	printf("\nNo se ha podido conectar con Arduino.\n");
+			}
+			else
+				printf("\nNo se ha podido conectar con Arduino.\n");
 			if ((1 / frecuencia) * 1000 > PAUSA_MS)
 				Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
 
@@ -740,10 +734,10 @@ void visualizar_datos_luminosidad(Serial* Arduino)
 	{
 		if (i < LONGCAD)			// Hasta completar el primer minuto
 		{
-			//if (Arduino->IsConnected())
-			//{
-			luminosidad = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
-				//luminosidad = leer_sensor_luminosidad(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
+			if (Arduino->IsConnected())
+			{
+			//luminosidad = rand();											// Para hacer la prueba de que el programa imprime bien los datos, se escogen numeros aleatorios
+				luminosidad = leer_sensor_luminosidad(Arduino);			// En el programa se cogen los datos desde el sensor con ayuda de Arduino
 			if (opcion == 1) {
 				vector1[i] = luminosidad;
 			}
@@ -776,9 +770,9 @@ void visualizar_datos_luminosidad(Serial* Arduino)
 			}
 			else
 				printf("XXX ");
-			//}
-			//else
-			//	printf("\nNo se ha podido conectar con Arduino.\n");
+			}
+			else
+				printf("\nNo se ha podido conectar con Arduino.\n");
 			if ((1 / frecuencia) * 1000 > PAUSA_MS)
 				Sleep((1 / frecuencia) * 1000 - PAUSA_MS);
 		}
@@ -877,20 +871,20 @@ float leer_sensor_luminosidad(Serial* Arduino)
 
 // FICHEROS-------------------------------------------------------------------------------
 
-int crear_fichero_temperatura(float temperatura[])
+int crear_fichero_temperatura(int temperatura[],char filename[])
 {
 	FILE* fichero;
 	errno_t e;
 	int resultado, i;
 
-	e = fopen_s(&fichero,"Temperatura.txt", "wt"); // Se abre el fichero en modo escritura
+	e = fopen_s(&fichero, filename, "wt"); // Se abre el fichero en modo escritura
 	if (fichero == NULL)
 		resultado = 0; // El fichero no ha podido crearse
 	else
 	{
 		resultado = 1; // El fichero ha podido crearse
 		for (i = 0; i < LONGCAD; i++)
-			fprintf(fichero, "%f\n", temperatura[i]); // ¡Importante!: Dejar un espacio blanco
+			fprintf(fichero, "%d ", temperatura[i]); // ¡Importante!: Dejar un espacio blanco
 		fclose(fichero); // Se cierra el fichero abierto
 	}
 	return resultado;
@@ -898,43 +892,41 @@ int crear_fichero_temperatura(float temperatura[])
 
 
 
-int escribir_fichero_temperatura(Serial* Arduino, float temperatura[])
+int escribir_fichero_temperatura(Serial* Arduino, int temperatura[],char filename[])
 {
 	int i, j;
 	FILE* fichero;
-	errno_t err;
+	errno_t e;
 	float vector1[LONGCAD];
 	for (j = 0; j < LONGCAD; j++) {
 		vector1[j] = leer_sensor_temperatura(Arduino);		// Transferir datos a vector
 	}
 
 
-	err = fopen_s(&fichero, "Temperatura.txt", "a");
-	if (err == 0) // Si el fichero se ha podido crear
+	e = fopen_s(&fichero, filename, "at");
+	if (e == 0) // Si el fichero se ha podido crear
 	{
 		for (j = 0; j < LONGCAD; j++) {
-			fprintf(fichero, "%f\n", vector1[j]); // Se graba en el fichero el número de usuarios
+			fprintf(fichero, "%d ", temperatura[j]); // Se graban en el fichero las temperaturas nuevas
 		}
-		
+
 		fclose(fichero);
 	}
 	else
 		printf("Se ha producido un problema a la hora de grabar el fichero de las temperaturas\n");
-	return err;
+	return e;
 }
 
 
 
-int leer_fichero_temperatura(Serial* Arduino,float temperatura[])
+int leer_fichero_temperatura(int temperatura[],char filename[])		// Imprime por pantalla el contenido del fichero
 {
 	FILE* fichero;
 	int resultado, i = 0;
 	errno_t e;
 	int n = 0;
-	for(i;i<LONGCAD;i++)
-		temperatura[i]= leer_sensor_temperatura(Arduino);
 
-	e = fopen_s(&fichero,"Temperatura.txt", "rt"); // Se abre el fichero en modo lectura
+	e = fopen_s(&fichero, filename, "rt"); // Se abre el fichero en modo lectura
 	if (fichero == NULL)
 		resultado = 0; // El fichero no ha podido abrirse
 	else
@@ -942,11 +934,39 @@ int leer_fichero_temperatura(Serial* Arduino,float temperatura[])
 		resultado = 1; // El fichero ha podido abrirse
 		while (!feof(fichero))
 		{
-			fscanf_s(fichero, "%f", &temperatura[n]);
+			fscanf_s(fichero, "%d ", &temperatura[n]);
 			n++;
 		}
-		
+
 		fclose(fichero); // Se cierra el fichero abierto
 	}
 	return resultado;
+}
+
+void fichero(void)		// Junta todas las funciones relacionadas con ficheros de este programa
+{
+	char filename[] = "Temperatura.txt";
+	int entrada[LONGCAD];
+	int salida[LONGCAD];
+	int exito, i;
+	for (i = 0; i < LONGCAD; i++)
+		//entrada[i] = leer_sensor_temperatura(Arduino);
+		entrada[i] = 2 * i;		// Se ponen numeros aleatorios para ver que se crea correctamente el fichero
+	exito = crear_fichero_temperatura(entrada, filename);
+	if (exito == 1) // Si se ha podido crear el fichero
+	{
+		exito = leer_fichero_temperatura(salida, filename);		// Imprime por pantalla el contido del fichero
+		if (exito == 1) // Si se ha podido leer el fichero
+		{
+			printf("Contenido del fichero: ");
+			for (i = 0; i < LONGCAD; i++)
+				printf("%d ", salida[i]);
+		}
+		else
+			printf("No se ha podido crear el fichero\n");
+	}
+	else
+		printf("No se ha podido abrir el fichero\n");
+
+	printf("\n");
 }
