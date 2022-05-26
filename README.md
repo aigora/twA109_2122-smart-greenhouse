@@ -31,3 +31,151 @@ Módulo Bluetooth HC-06 - Ref. LCBTHT6
 <br /> Resistencia Película de Carbón ¼ W - 330K Ohmios 5% - 10 Unidades - CR25330K - Ref. RS2A25B330K
 <br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
 <br /> Seeed Studio - Módulo Relé 5 V - Plug and Play - 103020005 - Ref. LCYLRL5    (Acciona bomba de agua)
+
+## Pruebas de sensores:
+# Sensor de luminosidad fotorresistor LDR
+//Aquí almacenamos los datos recogidos del LDR:
+int valorLDR = 0;
+
+//Decimos que pines vamos a utilizar para LED
+int red_light_pin= 6;
+int green_light_pin = 5;
+int blue_light_pin = 3;
+
+//Y que pin analógico conectarmos el LDR
+int pinLDR = A0;
+
+void setup()
+{
+//Establecemos como salida los pines para LED
+  pinMode(red_light_pin, OUTPUT);
+  pinMode(green_light_pin, OUTPUT);
+  pinMode(blue_light_pin, OUTPUT);
+
+//inicializamos monitor serie para visualizar valores de LDR
+Serial.begin(9600);
+
+}
+
+void loop()
+{
+//Guardamos el valor leido en una variable
+//IMPORTANTE UTILIZAR EL SERIAL PARA VER LOS VALORES Y COMPROBAR QUE RECIBE VALORES BUENOS
+
+valorLDR = analogRead(pinLDR);
+Serial.println(valorLDR);
+
+//Y comenzamos las comparaciones:
+if(valorLDR >= 1000)   // POCA LUZ
+{
+digitalWrite(6, HIGH);
+digitalWrite(5, LOW);
+digitalWrite(3, HIGH);
+}
+else if((valorLDR >= 800) & (valorLDR < 1000))    // LUZ INTERMEDIA
+{
+digitalWrite(6, HIGH);
+digitalWrite(5, HIGH);
+digitalWrite(3, LOW);
+}
+else if(valorLDR < 800)       // MUCHA LUZ
+{
+digitalWrite(6, LOW);
+digitalWrite(5, HIGH);
+digitalWrite(3, HIGH);
+}
+}
+
+# Prueba de sensor de temperatura y humedad DHT-11
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN 2    // Se conecta el cable de SIG (Data output) al pin 2
+#define DHTTYPE    DHT11     // Nombre del sensor
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
+uint32_t delayMS;
+
+void setup() {
+  Serial.begin(9600);
+  // Inicializamos sensor
+  dht.begin();
+  // Imprime los detalles del sensor
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  Serial.println(F("\nSensor de temperatura"));
+  Serial.print  (F("Nombre del sensor: ")); Serial.println(sensor.name);
+  Serial.print  (F("Valor máximo:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
+  Serial.print  (F("Valor mínimo:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
+  Serial.print  (F("Error de precisión:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
+  Serial.println(F("------------------------------------"));
+
+  dht.humidity().getSensor(&sensor);
+  Serial.println(F("Sensor de humedad"));
+  Serial.print  (F("Nombre del sensor: ")); Serial.println(sensor.name);
+  Serial.print  (F("Valor máximo:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
+  Serial.print  (F("Valor mínimo:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
+  Serial.print  (F("Error de precisión:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
+  Serial.println(F("------------------------------------"));
+  // Para un segunda tras mostrar la información
+  delayMS = sensor.min_delay / 1000;
+}
+
+void loop() {
+  // Delay between measurements.
+  delay(delayMS);
+  // Get temperature event and print its value.
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature)) {
+    Serial.println(F("Error al leer la temperatura"));
+  }
+  else {
+    Serial.print(F("Temperatura: "));
+    Serial.print(event.temperature);
+    Serial.println(F("°C"));
+  }
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity)) {
+    Serial.println(F("Error al leer la humedad"));
+  }
+  else {
+    Serial.print(F("Humedad: "));
+    Serial.print(event.relative_humidity);
+    Serial.println(F("%"));
+  }
+}
+# Prueba de ventilador
+const int alt = 7;
+const int cont = 8;
+int speed = 200;
+
+void setup(){
+  pinMode(alt,OUTPUT);
+  pinMode(cont,OUTPUT);
+}
+
+void loop(){
+  analogWrite(cont,LOW);
+  analogWrite(alt,speed);
+  delay(2000);
+  analogWrite(cont,LOW);
+  analogWrite(alt,LOW);
+  delay(2000);
+}
+# Prueba de bomba de agua por acción de un relé
+void setup() {
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+// the loop function runs over and over again forever
+void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(2000);                       // wait for a second
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  delay(3000);                       // wait for a second
+}
