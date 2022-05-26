@@ -86,7 +86,7 @@ digitalWrite(3, HIGH);
 }
 }
 
-### Prueba de sensor de temperatura y humedad DHT-11
+### Sensor de temperatura y humedad DHT-11
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
@@ -148,7 +148,7 @@ void loop() {
     Serial.println(F("%"));
   }
 }
-### Prueba de ventilador
+### Ventilador
 const int alt = 7;
 const int cont = 8;
 int speed = 200;
@@ -166,7 +166,7 @@ void loop(){
   analogWrite(alt,LOW);
   delay(2000);
 }
-### Prueba de bomba de agua por acción de un relé
+### Bomba de agua por acción de un relé
 void setup() {
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);
