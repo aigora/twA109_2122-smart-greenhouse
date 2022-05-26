@@ -32,7 +32,7 @@ Módulo Bluetooth HC-06 - Ref. LCBTHT6
 <br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
 <br /> Seeed Studio - Módulo Relé 5 V - Plug and Play - 103020005 - Ref. LCYLRL5    (Acciona bomba de agua)
 
-## Pruebas de sensores:
+## Pruebas de sensores y actuadores:
 ### Sensor de luminosidad fotorresistor LDR
 //Aquí almacenamos los datos recogidos del LDR:
 int valorLDR = 0;
