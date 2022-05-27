@@ -89,7 +89,7 @@ digitalWrite(3, HIGH);
 ```
 
 ### Sensor de temperatura y humedad DHT-11
-´´´
+```
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
@@ -150,8 +150,7 @@ void loop() {
     Serial.print(event.relative_humidity);
     Serial.println(F("%"));
   }
-}
-```
+}```
 ### Ventilador
 ```
 const int alt = 7;
