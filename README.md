@@ -18,7 +18,8 @@ El objetivo fundamental del proyecto es la construcción de un sistema que permi
 ## Actuadores
 Ventilador DC 5V PWM - HALJIA L9110
 <br /> Moto Bomba Sumergible de Agua - 108.MT0103 - Ref. MMBB001
-<br /> Diodo LED 5 mm - Cátodo común - Clear RGB 35° - Ref. SMDL5C0A   (Simulación de luz solar)
+<br /> 2x Diodo LED RGB 5 mm - Ánodo común - Ref. SMDL5C0A   (Alarma)
+<br /> Diodo Led 5mm Naranja - Ref. SMDL5DN (Simula luz solar)
 
 ## Sensores
 Módulo sensor humedad y temperatura DHT11 - 101020011 - Ref. SSHU004
@@ -31,7 +32,6 @@ Módulo Arduino Uno Rev03 Compatible con cable USB - Ref. LCA1201
 <br /> 8x Varta LR06 - Pila Alcalina 1,5 V AA - Ref. BA51680    (Fuente de alimentación)
 <br /> Portapilas 8 Pilas AA Cable - Ref. BA71677
 <br /> 10x Resistencia Película de Carbón ¼ W - 330K Ohmios 5% - CR25330K - Ref. RS2A25B330K
-<br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
 
 ## Pruebas de sensores y actuadores:
 ### Sensor de luminosidad fotorresistor LDR
