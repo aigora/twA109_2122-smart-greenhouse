@@ -12,6 +12,9 @@ Carlos Osuna Cabezudo: @Osuuunaa
 
 El objetivo fundamental del proyecto es la construcción de un sistema que permita cuidar una planta, así como monitorizar todas las variables que influyen en su crecimiento y en su correcto desarrollo mediante una serie de sensores y actuadores que funcionan de manera autónoma en base a nuestros requerimientos. A grandes rasgos, el proyecto constará de unos sensores de temperatura, humedad y luminosidad. Además contará con una serie de actuadores, ya sea una pequeña bomba de agua o un sistema de irrigación, que permitan el riego automático, varios ventiladores que faciliten la disminución de la temperatura y un relé capaz de controlar luces que emulen el ciclo de luz-oscuridad que necesita una planta. A su vez el programa realizará informes de las condiciones y del nivel del tanque de agua que alimenta el sistema de riego.
 
+![IMG_20220526_175328](https://user-images.githubusercontent.com/100867734/170655672-4b2f350a-daaa-4602-8ce3-773bea957702.jpg)
+
+
 ## Actuadores
 Ventilador DC 5V PWM - HALJIA L9110
 <br /> Moto Bomba Sumergible de Agua - 108.MT0103 - Ref. MMBB001
