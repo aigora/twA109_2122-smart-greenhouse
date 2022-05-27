@@ -5,32 +5,30 @@ Consiste en un pequeño invernadero capaz de medir distintos factores de su ento
 ## Integrantes del equipo
 
 Carlos Osuna Cabezudo: @Osuuunaa
-<br /> 	Pablo Muñoz Moreno 
-<br /> Javier Rodríguez Jiménez 
+<br /> 	Pablo Muñoz Moreno: @Pablomunozmoreno
+<br /> Javier Rodríguez Jiménez @javierrjimenez
 
 ## Objetivos del trabajo
 
 El objetivo fundamental del proyecto es la construcción de un sistema que permita cuidar una planta, así como monitorizar todas las variables que influyen en su crecimiento y en su correcto desarrollo mediante una serie de sensores y actuadores que funcionan de manera autónoma en base a nuestros requerimientos. A grandes rasgos, el proyecto constará de unos sensores de temperatura, humedad y luminosidad. Además contará con una serie de actuadores, ya sea una pequeña bomba de agua o un sistema de irrigación, que permitan el riego automático, varios ventiladores que faciliten la disminución de la temperatura y un relé capaz de controlar luces que emulen el ciclo de luz-oscuridad que necesita una planta. A su vez el programa realizará informes de las condiciones y del nivel del tanque de agua que alimenta el sistema de riego.
 
 ## Actuadores
-Foco LED 10W LEDA6001NW-B - Ref. IIF7030
-<br /> Ventilador DC 5V PWM - HALJIA L9110
+Ventilador DC 5V PWM - HALJIA L9110
 <br /> Moto Bomba Sumergible de Agua - 108.MT0103 - Ref. MMBB001
-<br /> Diodo LED 5 mm - Cátodo común - Clear RGB 35° - Ref. SMDL5C0A   (Alarma)
+<br /> Diodo LED 5 mm - Cátodo común - Clear RGB 35° - Ref. SMDL5C0A   (Simulación de luz solar)
 
 ## Sensores
 Módulo sensor humedad y temperatura DHT11 - 101020011 - Ref. SSHU004
 <br /> Resistencia LDR 5 x 4 mm - Sensor de Luz - Ref. SSLDR34  (Sensor de luminosidad)
 
 ## Microcontroladores
-Módulo Bluetooth HC-06 - Ref. LCBTHT6
-<br /> Módulo Arduino Uno Rev03 Compatible con cable USB - Ref. LCA1201
-<br /> Módulo Board Experimental 830 Contactos - Ref. CN1A003
-<br /> Varta LR06 - Pila Alcalina 1,5 V AA - Blister 8 Unidades - Ref. BA51680    (Fuente de alimentación)
-<br /> Portapilas 8 Pilas AA Cable - Ref. BA71677
-<br /> Resistencia Película de Carbón ¼ W - 330K Ohmios 5% - 10 Unidades - CR25330K - Ref. RS2A25B330K
-<br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
+Módulo Arduino Uno Rev03 Compatible con cable USB - Ref. LCA1201
 <br /> Seeed Studio - Módulo Relé 5 V - Plug and Play - 103020005 - Ref. LCYLRL5    (Acciona bomba de agua)
+<br /> Módulo Board Experimental 830 Contactos - Ref. CN1A003
+<br /> 8x Varta LR06 - Pila Alcalina 1,5 V AA - Ref. BA51680    (Fuente de alimentación)
+<br /> Portapilas 8 Pilas AA Cable - Ref. BA71677
+<br /> 10x Resistencia Película de Carbón ¼ W - 330K Ohmios 5% - CR25330K - Ref. RS2A25B330K
+<br /> Diodo Led 5mm Difuso Naranja - Ref. SMDL5DN    (Simula luz solar)
 
 ## Pruebas de sensores y actuadores:
 ### Sensor de luminosidad fotorresistor LDR
@@ -150,7 +148,8 @@ void loop() {
     Serial.print(event.relative_humidity);
     Serial.println(F("%"));
   }
-}```
+}
+```
 ### Ventilador
 ```
 const int alt = 7;
