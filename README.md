@@ -34,6 +34,7 @@ Módulo Bluetooth HC-06 - Ref. LCBTHT6
 
 ## Pruebas de sensores y actuadores:
 ### Sensor de luminosidad fotorresistor LDR
+```
 //Aquí almacenamos los datos recogidos del LDR:
 int valorLDR = 0;
 
@@ -85,8 +86,10 @@ digitalWrite(5, HIGH);
 digitalWrite(3, HIGH);
 }
 }
+```
 
 ### Sensor de temperatura y humedad DHT-11
+´´´
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
@@ -148,7 +151,9 @@ void loop() {
     Serial.println(F("%"));
   }
 }
+```
 ### Ventilador
+```
 const int alt = 7;
 const int cont = 8;
 int speed = 200;
@@ -166,6 +171,7 @@ void loop(){
   analogWrite(alt,LOW);
   delay(2000);
 }
+```
 ### Bomba de agua por acción de un relé
 ```
 void setup() {
